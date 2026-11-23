@@ -2,10 +2,13 @@ package com.nexus.backend.controller;
 
 import com.nexus.backend.entity.Ticket;
 import com.nexus.backend.service.TicketService;
+
+import jakarta.validation.Valid;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/tickets")
@@ -19,7 +22,7 @@ public class TicketController {
 
     // Create a new ticket
     @PostMapping
-    public Ticket createTicket(@RequestBody Ticket ticket) {
+    public Ticket createTicket(@Valid @RequestBody Ticket ticket) {
         return ticketService.createTicket(ticket);
     }
 
@@ -31,7 +34,25 @@ public class TicketController {
 
     // Get ticket by ID
     @GetMapping("/{id}")
-    public Optional<Ticket> getTicketById(@PathVariable Long id) {
+    public Ticket getTicketById(@PathVariable Long id) {
         return ticketService.getTicketById(id);
+    }
+
+    // Update ticket
+    @PutMapping("/{id}")
+    public Ticket updateTicket(
+            @PathVariable Long id,
+            @Valid @RequestBody Ticket ticket) {
+
+        return ticketService.updateTicket(id, ticket);
+    }
+
+    // Delete ticket
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTicket(@PathVariable Long id) {
+
+        ticketService.deleteTicket(id);
+
+        return ResponseEntity.noContent().build();
     }
 }

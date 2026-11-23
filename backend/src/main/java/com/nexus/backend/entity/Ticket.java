@@ -1,6 +1,9 @@
 package com.nexus.backend.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -11,15 +14,24 @@ public class Ticket {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Ticket title is required")
     private String title;
 
+    @NotBlank(message = "Ticket description is required")
     private String description;
 
-    private String status;
+    @NotNull(message = "Ticket status is required")
+    @Enumerated(EnumType.STRING)
+    private TicketStatus status;
 
-    private String priority;
+    @NotNull(message = "Ticket priority is required")
+    @Enumerated(EnumType.STRING)
+    private TicketPriority priority;
 
     private LocalDateTime createdAt;
+
+    public Ticket() {
+    }
 
     public Long getId() {
         return id;
@@ -45,19 +57,19 @@ public class Ticket {
         this.description = description;
     }
 
-    public String getStatus() {
+    public TicketStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(TicketStatus status) {
         this.status = status;
     }
 
-    public String getPriority() {
+    public TicketPriority getPriority() {
         return priority;
     }
 
-    public void setPriority(String priority) {
+    public void setPriority(TicketPriority priority) {
         this.priority = priority;
     }
 
@@ -67,9 +79,6 @@ public class Ticket {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public Ticket() {
     }
 
     @PrePersist

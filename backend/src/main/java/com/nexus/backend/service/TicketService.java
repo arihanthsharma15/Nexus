@@ -2,11 +2,11 @@ package com.nexus.backend.service;
 
 import com.nexus.backend.entity.Ticket;
 import com.nexus.backend.repository.TicketRepository;
+import com.nexus.backend.exception.TicketNotFoundException;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
-
 
 @Service
 public class TicketService {
@@ -27,7 +27,39 @@ public class TicketService {
         return ticketRepository.findAll();
     }
 
-    public Optional<Ticket> getTicketById(Long id) {
-        return ticketRepository.findById(id);
+    // Retrieve ticket by ID
+    public Ticket getTicketById(Long id) {
+
+        return ticketRepository.findById(id)
+                .orElseThrow(() ->
+                        new TicketNotFoundException(
+                                "Ticket not found with ID: " + id));
+    }
+
+    // Update an existing ticket
+    public Ticket updateTicket(Long id, Ticket updatedTicket) {
+
+        Ticket existingTicket = ticketRepository.findById(id)
+                .orElseThrow(() ->
+                        new TicketNotFoundException(
+                                "Ticket not found with ID: " + id));
+
+        existingTicket.setTitle(updatedTicket.getTitle());
+        existingTicket.setDescription(updatedTicket.getDescription());
+        existingTicket.setStatus(updatedTicket.getStatus());
+        existingTicket.setPriority(updatedTicket.getPriority());
+
+        return ticketRepository.save(existingTicket);
+    }
+
+    // Delete an existing ticket
+    public void deleteTicket(Long id) {
+
+        Ticket existingTicket = ticketRepository.findById(id)
+                .orElseThrow(() ->
+                        new TicketNotFoundException(
+                                "Ticket not found with ID: " + id));
+
+        ticketRepository.delete(existingTicket);
     }
 }

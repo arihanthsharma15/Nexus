@@ -6,7 +6,7 @@
 
 **Current Phase:** Phase 1 — Secure Backend Foundation
 
-**Current Development Stage:** Initial Ticket Management Backend
+**Current Development Stage:** Ticket Management Backend — CRUD and Unit Testing Completed
 
 **Operating System:** Ubuntu Linux
 
@@ -20,9 +20,11 @@
 
 **API Testing:** Postman
 
+**Automated Testing:** JUnit 5 + Mockito
+
 **Git Branch:** develop
 
-**GitHub Repository:** https://github.com/arihanthsharma15/Nexus
+**GitHub Repository:** [https://github.com/arihanthsharma15/Nexus](https://github.com/arihanthsharma15/Nexus)
 
 ---
 
@@ -34,7 +36,8 @@
 - Node.js installed.
 - IntelliJ IDEA configured for backend development.
 - VS Code available for frontend development.
-- Postman installed and configured for API testing.
+- Postman installed and configured.
+- JUnit 5 and Mockito testing environment configured.
 
 ### PostgreSQL Configuration
 
@@ -51,20 +54,29 @@
 
 ### A. Spring Boot Project Setup
 
-- Created Spring Boot Maven application.
-- Configured Java 21.
-- Added required dependencies:
-  - Spring Web
-  - Spring Security
-  - Spring Data JPA
-  - PostgreSQL Driver
-  - Validation
-  - Lombok
-- Configured application properties.
-- Successfully connected Spring Boot to PostgreSQL.
-- Verified embedded Tomcat startup on port 8080.
+Created Spring Boot Maven application.
 
-### B. Initial REST API
+Configured:
+
+- Java 21.
+- Spring Boot 4.1.3.
+- Maven build system.
+- PostgreSQL database connection.
+- Embedded Tomcat server.
+
+Dependencies include:
+
+- Spring Web MVC
+- Spring Security
+- Spring Data JPA
+- PostgreSQL Driver
+- Validation
+- Lombok
+- Spring Boot testing starters
+
+Successfully connected Spring Boot to PostgreSQL.
+
+### B. Health API
 
 Created:
 
@@ -88,17 +100,19 @@ Created:
 
 Implemented:
 
-- Configured a Spring Security filter chain.
+- Configured Spring Security filter chain.
 - Disabled default form login.
 - Disabled HTTP Basic authentication.
-- Configured `/api/health` and `/api/tickets/**` as public endpoints for current development testing.
+- Configured `/api/health` and `/api/tickets/**` as public endpoints for development testing.
 - Kept other endpoints authenticated.
 
 **Temporary development configuration:**
 
-CSRF protection is currently disabled to allow testing POST requests through Postman without CSRF tokens.
+- CSRF protection is disabled for current API testing.
+- Ticket endpoints are currently publicly accessible.
+- Proper authentication, authorization, JWT and role-based access control are still pending.
 
-This is a temporary development setup. Production security will be redesigned alongside proper authentication and authorization.
+This configuration is not production-ready and will be redesigned during the security implementation milestone.
 
 ### D. Ticket Entity
 
@@ -106,16 +120,16 @@ Created:
 
 `entity/Ticket.java`
 
-Implemented the initial database entity with:
+Implemented database entity with:
 
-| Field | Java Type | Purpose |
-|---|---|---|
-| id | Long | Primary key |
-| title | String | Ticket title |
-| description | String | Ticket description |
-| status | String | Ticket status |
-| priority | String | Ticket priority |
-| createdAt | LocalDateTime | Creation timestamp |
+| Field       | Java Type      | Purpose            |
+| ----------- | -------------- | ------------------ |
+| id          | Long           | Primary key        |
+| title       | String         | Ticket title       |
+| description | String         | Ticket description |
+| status      | TicketStatus   | Ticket status      |
+| priority    | TicketPriority | Ticket priority    |
+| createdAt   | LocalDateTime  | Creation timestamp |
 
 Annotations implemented:
 
@@ -123,16 +137,46 @@ Annotations implemented:
 - `@Table`
 - `@Id`
 - `@GeneratedValue`
+- `@NotBlank`
+- `@NotNull`
+- `@Enumerated(EnumType.STRING)`
 - `@PrePersist`
 
 Also implemented:
 
-- Getters
-- Setters
-- No-argument constructor
+- Getters and setters.
+- No-argument constructor.
 - Automatic creation timestamp using `LocalDateTime.now()`.
 
-### E. Ticket Repository
+### E. Ticket Status and Priority Enums
+
+Created:
+
+`entity/TicketStatus.java`
+
+Available statuses:
+
+- OPEN
+- IN_PROGRESS
+- RESOLVED
+- CLOSED
+
+Created:
+
+`entity/TicketPriority.java`
+
+Available priorities:
+
+- LOW
+- MEDIUM
+- HIGH
+- URGENT
+
+Enums are stored as strings in PostgreSQL using:
+
+`@Enumerated(EnumType.STRING)`
+
+### F. Ticket Repository
 
 Created:
 
@@ -142,7 +186,7 @@ Implemented:
 
 `TicketRepository extends JpaRepository<Ticket, Long>`
 
-Repository operations available:
+Available repository operations include:
 
 - `save()`
 - `findAll()`
@@ -150,9 +194,9 @@ Repository operations available:
 - `deleteById()`
 - `existsById()`
 
-Spring Data JPA provides the implementation automatically.
+Spring Data JPA provides the repository implementation automatically.
 
-### F. Ticket Service
+### G. Ticket Service
 
 Created:
 
@@ -160,14 +204,22 @@ Created:
 
 Implemented:
 
-1. Constructor-based dependency injection.
-2. `createTicket(Ticket ticket)`
-3. `getAllTickets()`
-4. `getTicketById(Long id)`
+- Constructor-based dependency injection.
+- `createTicket(Ticket ticket)`
+- `getAllTickets()`
+- `getTicketById(Long id)`
+- `updateTicket(Long id, Ticket updatedTicket)`
+- `deleteTicket(Long id)`
 
-The service layer communicates with the repository to perform database operations.
+Responsibilities:
 
-### G. Ticket Controller
+- Communicates with the repository.
+- Performs ticket creation and retrieval.
+- Handles ticket updates.
+- Handles ticket deletion.
+- Throws custom exceptions when a requested ticket does not exist.
+
+### H. Ticket Controller
 
 Created:
 
@@ -177,26 +229,89 @@ Base endpoint:
 
 `/api/tickets`
 
-Implemented endpoints:
+Implemented complete CRUD functionality:
 
-| HTTP Method | Endpoint | Function |
-|---|---|---|
-| POST | `/api/tickets` | Create a ticket |
-| GET | `/api/tickets` | Retrieve all tickets |
-| GET | `/api/tickets/{id}` | Retrieve a ticket by ID |
+| HTTP Method | Endpoint            | Function              |
+| ----------- | ------------------- | --------------------- |
+| POST        | `/api/tickets`      | Create a ticket       |
+| GET         | `/api/tickets`      | Retrieve all tickets  |
+| GET         | `/api/tickets/{id}` | Retrieve ticket by ID |
+| PUT         | `/api/tickets/{id}` | Update a ticket       |
+| DELETE      | `/api/tickets/{id}` | Delete a ticket       |
 
-Controller annotations:
+Controller annotations include:
 
 - `@RestController`
 - `@RequestMapping`
 - `@PostMapping`
 - `@GetMapping`
+- `@PutMapping`
+- `@DeleteMapping`
 - `@RequestBody`
 - `@PathVariable`
+- `@Valid`
+
+DELETE returns HTTP 204 No Content when successful.
+
+### I. Input Validation
+
+Implemented Jakarta Bean Validation.
+
+Validation rules:
+
+- Ticket title cannot be blank.
+- Ticket description cannot be blank.
+- Ticket status cannot be null.
+- Ticket priority cannot be null.
+
+Invalid input is handled through the global exception handler and returns HTTP 400 Bad Request.
+
+### J. Custom Exception Handling
+
+Created:
+
+`exception/TicketNotFoundException.java`
+
+Implemented a custom runtime exception for missing ticket records.
+
+Created:
+
+`exception/GlobalExceptionHandler.java`
+
+Implemented using:
+
+- `@RestControllerAdvice`
+- `@ExceptionHandler`
+
+Handled exceptions:
+
+1. `MethodArgumentNotValidException`
+
+   - Returns HTTP 400.
+   - Provides field-specific validation messages.
+
+2. `HttpMessageNotReadableException`
+
+   - Returns HTTP 400.
+   - Handles invalid JSON and unsupported enum values.
+
+3. `TicketNotFoundException`
+
+   - Returns HTTP 404.
+   - Provides a consistent ticket-not-found response.
+
+4. General `Exception`
+
+   - Returns HTTP 500.
+   - Provides a generic internal server error response.
+
+Missing ticket IDs have been verified for GET, PUT and DELETE operations.
 
 ---
 
 ## 4. API Testing Results
+
+All five ticket CRUD operations have been implemented and tested using Postman.
 
 ### Test 1 — Create Ticket
 
@@ -204,29 +319,9 @@ Controller annotations:
 
 **Endpoint:** `/api/tickets`
 
-Request body:
+Verified successful ticket creation and PostgreSQL persistence.
 
-```json
-{
-  "title": "Login Issue",
-  "description": "Unable to login to my NEXUS account",
-  "status": "OPEN",
-  "priority": "HIGH"
-}
-```
-
-**Result:** SUCCESS — HTTP 200 OK
-
-Generated ticket:
-
-- ID: 1
-- Title: Login Issue
-- Status: OPEN
-- Priority: HIGH
-
-The `createdAt` timestamp was generated automatically.
-
-Hibernate generated an SQL INSERT statement, and PostgreSQL successfully stored the ticket.
+Result: HTTP 200 OK.
 
 ### Test 2 — Retrieve All Tickets
 
@@ -234,23 +329,123 @@ Hibernate generated an SQL INSERT statement, and PostgreSQL successfully stored 
 
 **Endpoint:** `/api/tickets`
 
-**Result:** SUCCESS — HTTP 200 OK
+Verified successful retrieval of ticket records.
 
-Hibernate generated a SELECT query to retrieve ticket records from PostgreSQL.
+Result: HTTP 200 OK.
 
 ### Test 3 — Retrieve Ticket by ID
 
 **Method:** GET
 
-**Endpoint:** `/api/tickets/1`
+**Endpoint:** `/api/tickets/{id}`
 
-**Implementation:** Completed.
+Verified successful retrieval of an individual ticket.
 
-**Verification:** Initial testing performed; detailed response evidence not yet recorded in this document.
+Result: HTTP 200 OK.
+
+Missing ticket ID returns HTTP 404.
+
+### Test 4 — Update Ticket
+
+**Method:** PUT
+
+**Endpoint:** `/api/tickets/{id}`
+
+Verified updates to:
+
+- Title
+- Description
+- Status
+- Priority
+
+Existing ticket ID is preserved.
+
+Result: HTTP 200 OK.
+
+Missing ticket ID returns HTTP 404.
+
+### Test 5 — Delete Ticket
+
+**Method:** DELETE
+
+**Endpoint:** `/api/tickets/{id}`
+
+Verified successful ticket deletion.
+
+Result: HTTP 204 No Content.
+
+Missing ticket ID returns HTTP 404.
+
+### Additional Validation Testing
+
+Verified:
+
+- Empty title returns HTTP 400.
+- Invalid enum values return HTTP 400.
+- Missing tickets return consistent HTTP 404 responses.
 
 ---
 
-## 5. Current Project Structure
+## 5. Automated Testing
+
+### Testing Framework
+
+Configured:
+
+- JUnit 5
+- Mockito
+- Spring Boot testing dependencies
+
+Created:
+
+`src/test/java/com/nexus/backend/service/TicketServiceTest.java`
+
+Implemented 8 unit tests.
+
+| Test Case                  | Result |
+| -------------------------- | ------ |
+| Create ticket successfully | PASS   |
+| Retrieve all tickets       | PASS   |
+| Retrieve ticket by ID      | PASS   |
+| Retrieve missing ticket    | PASS   |
+| Update ticket successfully | PASS   |
+| Update missing ticket      | PASS   |
+| Delete ticket successfully | PASS   |
+| Delete missing ticket      | PASS   |
+
+Testing concepts covered:
+
+- `@Test`
+- `@ExtendWith(MockitoExtension.class)`
+- `@Mock`
+- `@InjectMocks`
+- `when().thenReturn()`
+- `assertEquals()`
+- `assertThrows()`
+- `verify()`
+- `never()`
+
+### Maven Test Execution
+
+Command:
+
+`mvn clean test`
+
+Final verified result:
+
+| Test Class                   | Tests | Failures | Errors |
+| ---------------------------- | ----: | -------: | -----: |
+| NexusBackendApplicationTests |     1 |        0 |      0 |
+| TicketServiceTest            |     8 |        0 |      0 |
+| **Total**                    | **9** |    **0** |  **0** |
+
+**Build Result:** BUILD SUCCESS
+
+Note: TicketService tests use Mockito mocks. They do not yet verify interactions against a real PostgreSQL database. Database integration testing using Testcontainers remains pending.
+
+---
+
+## 6. Current Project Structure
 
 ```text
 NEXUS/
@@ -267,7 +462,9 @@ NEXUS/
 │   │   │   │   │   └── TicketController.java
 │   │   │   │   │
 │   │   │   │   ├── entity/
-│   │   │   │   │   └── Ticket.java
+│   │   │   │   │   ├── Ticket.java
+│   │   │   │   │   ├── TicketStatus.java
+│   │   │   │   │   └── TicketPriority.java
 │   │   │   │   │
 │   │   │   │   ├── repository/
 │   │   │   │   │   └── TicketRepository.java
@@ -275,24 +472,33 @@ NEXUS/
 │   │   │   │   ├── service/
 │   │   │   │   │   └── TicketService.java
 │   │   │   │   │
+│   │   │   │   ├── exception/
+│   │   │   │   │   ├── GlobalExceptionHandler.java
+│   │   │   │   │   └── TicketNotFoundException.java
+│   │   │   │   │
 │   │   │   │   └── NexusBackendApplication.java
 │   │   │   │
 │   │   │   └── resources/
 │   │   │       └── application.properties
 │   │   │
 │   │   └── test/
+│   │       └── java/com/nexus/backend/service/
+│   │           └── TicketServiceTest.java
 │   │
 │   └── pom.xml
 │
 ├── frontend/
 ├── database/
 ├── docs/
+│   ├── PROJECT_OVERVIEW.md
+│   └── DEVELOPMENT_PROGRESS.md
+│
 └── .gitignore
 ```
 
 ---
 
-## 6. Current Development Status
+## 7. Current Development Status
 
 ### Completed
 
@@ -301,77 +507,105 @@ NEXUS/
 - [x] Health endpoint
 - [x] Initial Spring Security configuration
 - [x] Ticket Entity
+- [x] Ticket Status enum
+- [x] Ticket Priority enum
 - [x] Ticket Repository
 - [x] Ticket Service
 - [x] Ticket Controller
 - [x] Create Ticket API
 - [x] Retrieve All Tickets API
-- [x] Initial Ticket By ID implementation
-- [x] Postman installation and configuration
+- [x] Retrieve Ticket by ID API
+- [x] Update Ticket API
+- [x] Delete Ticket API
+- [x] Input validation
+- [x] Custom TicketNotFoundException
+- [x] Global exception handling
+- [x] Invalid enum handling
+- [x] Postman CRUD testing
+- [x] JUnit 5 configuration
+- [x] Mockito configuration
+- [x] TicketService unit tests
+- [x] Successful Maven test execution
 
 ### Pending
 
-- [ ] Update Ticket API
-- [ ] Delete Ticket API
-- [ ] Complete verification of GET by ID
-- [ ] Input validation
 - [ ] DTO implementation
-- [ ] Global exception handling
-- [ ] Proper HTTP status codes
-- [ ] Status and priority enums
 - [ ] Ticket comments
 - [ ] User management
 - [ ] Authentication and authorization
+- [ ] JWT and role-based access control
 - [ ] Redis integration
 - [ ] Kafka or RabbitMQ integration
 - [ ] Docker Compose
-- [ ] Automated testing
-- [ ] Security scanning
+- [ ] Testcontainers integration testing
+- [ ] TLS configuration
+- [ ] Trivy security scanning
+- [ ] Semgrep code scanning
+- [ ] OWASP ZAP security testing
 
 ---
 
-## 7. Immediate Next Steps
+## 8. Immediate Next Steps
 
-The next development session should continue from the current Ticket Management implementation.
+The next development session will continue Phase 1.
 
 Recommended order:
 
-1. Review the current implementation.
-2. Implement Update Ticket functionality.
-3. Implement Delete Ticket functionality.
-4. Test all CRUD operations using Postman.
-5. Verify database records.
-6. Review the completed code.
-7. Commit and push the milestone to GitHub.
+1. Create a dedicated feature branch for Ticket Comments.
+2. Design the TicketComment entity.
+3. Establish the relationship between Ticket and TicketComment.
+4. Implement TicketCommentRepository.
+5. Implement comment service logic.
+6. Create REST APIs to add and retrieve ticket comments.
+7. Test comment functionality using Postman.
+8. Write automated tests.
+9. Merge the completed feature into develop.
+
+Future Phase 1 features will follow the project roadmap.
 
 ---
 
-## 8. Git Development Status
+## 9. Git Development Status
 
-Current branch: `develop`
+**Current branch:** develop
 
 Git workflow:
 
 - `main` — Stable production-ready code.
 - `develop` — Integration and development branch.
-- `feature/*` — Individual feature branches.
+- `feature/*` — Individual feature development branches.
 
-The initial Spring Boot backend setup has already been committed and pushed.
+Latest local commit:
 
-**Current Ticket Management changes are pending their next Git commit.**
+`feat: complete ticket CRUD and service unit tests`
+
+The commit was created on the local `develop` branch.
+
+The code push and documentation push should be verified separately.
+
+**Next planned feature branch:**
+
+`feature/ticket-comments`
 
 ---
 
-## 9. Learning Progress
+## 10. Learning Progress
 
 Concepts covered during development:
 
-- Java Entity classes.
-- OOP classes and objects.
+### Java and OOP
+
+- Classes and objects.
 - Constructors.
 - Getters and setters.
+- Enums.
+- Exception handling.
+- Interfaces.
+
+### Spring Boot
+
+- Entity classes.
 - JPA annotations.
-- Primary keys and generated IDs.
 - Hibernate ORM.
 - Spring Data JPA.
 - Repository pattern.
@@ -379,33 +613,51 @@ Concepts covered during development:
 - Dependency Injection.
 - Constructor-based injection.
 - REST controllers.
-- HTTP GET and POST methods.
-- JSON request bodies.
-- Path variables.
+- Request mapping.
+- Request body and path variables.
 - Spring Security filter chains.
-- CSRF protection.
-- PostgreSQL INSERT and SELECT operations.
-- API testing using Postman.
+- Validation and exception handling.
 
-**Development principle:** Every implementation should be understood before moving to the next feature.
+### HTTP and API Development
+
+- GET, POST, PUT and DELETE.
+- HTTP status codes.
+- JSON request and response bodies.
+- REST API testing using Postman.
+
+### Automated Testing
+
+- JUnit 5.
+- Mockito.
+- Mock objects.
+- Dependency injection in unit tests.
+- Assertions.
+- Exception testing.
+- Method invocation verification.
+- Maven test execution.
+
+**Development principle:** Every implementation should be understood and tested before moving to the next feature.
 
 ---
 
-## 10. Development Continuation Instructions
+## 11. Development Continuation Instructions
 
 Continue NEXUS from the current state described in this document.
 
 Maintain the following development rules:
 
 1. Work on one feature at a time.
-2. Explain Java and Spring Boot concepts in simple Hinglish.
-3. Do not assume strong OOP fundamentals.
-4. Explain annotations, classes, methods, and dependencies.
-5. Provide complete files when requested.
-6. Guide IntelliJ operations step by step.
-7. Test APIs using Postman.
-8. Debug actual errors using logs and screenshots.
-9. Keep the MVP simple.
-10. Do not introduce advanced technologies before their planned phase.
+2. Do not assume strong OOP fundamentals.
+3. Explain annotations, classes, methods and dependencies.
+4. Provide complete updated files whenever an existing Java file changes.
+5. Guide IntelliJ operations step by step.
+6. Test APIs using Postman.
+7. Debug actual errors using logs and screenshots.
+8. Keep the MVP simple.
+9. Do not introduce advanced technologies before their planned phase.
+10. Maintain a disciplined Git branching and commit workflow.
+11. Update this progress document after meaningful development milestones.
 
-**Current stopping point:** Initial Ticket Management APIs have been implemented, and ticket creation and retrieval have been successfully tested. The next milestone is completing Ticket CRUD before proceeding to the remaining Phase 1 features.
+**Current stopping point:** Complete Ticket CRUD, input validation, custom exception handling and 8 TicketService unit tests have been implemented and verified. The full Maven test suite reports 9 tests passed with zero failures and zero errors.
+
+**Next milestone:** Ticket Comments feature development using a dedicated Git feature branch.

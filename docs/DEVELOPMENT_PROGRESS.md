@@ -529,8 +529,8 @@ NEXUS/
 
 ### Pending
 
-- [ ] DTO implementation
-- [ ] Ticket comments
+- [x] DTO implementation
+- [x] Ticket comments
 - [ ] User management
 - [ ] Authentication and authorization
 - [ ] JWT and role-based access control
@@ -661,3 +661,56 @@ Maintain the following development rules:
 **Current stopping point:** Complete Ticket CRUD, input validation, custom exception handling and 8 TicketService unit tests have been implemented and verified. The full Maven test suite reports 9 tests passed with zero failures and zero errors.
 
 **Next milestone:** Ticket Comments feature development using a dedicated Git feature branch.
+
+
+---
+
+## 12. Development Update — 24 November 2026
+
+### Ticket Comments Feature — Completed
+
+Implemented the Ticket Comments functionality on `feature/ticket-comments`.
+
+**Implemented Components:**
+- `TicketComment` entity with Many-to-One relationship to Ticket.
+- `TicketCommentRepository` with chronological retrieval.
+- `TicketCommentService` for comment business logic.
+- `TicketCommentController` with REST APIs.
+- `TicketCommentRequest` and `TicketCommentResponse` DTOs.
+
+**APIs Implemented:**
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/tickets/{ticketId}/comments` | Add comment |
+| GET | `/api/tickets/{ticketId}/comments` | Retrieve comments |
+
+**Verification:**
+- Postman testing completed successfully.
+- Multiple comments tested for the same ticket.
+- Chronological ordering verified.
+- Missing ticket handling verified.
+- `TicketCommentServiceTest` — 4 unit tests added.
+
+**Latest Automated Test Results:**
+
+| Test Class | Tests |
+|---|---:|
+| NexusBackendApplicationTests | 1 |
+| TicketServiceTest | 8 |
+| TicketCommentServiceTest | 4 |
+| **Total** | **13** |
+
+**Maven Result:** `BUILD SUCCESS` — 13 tests passed, 0 failures, 0 errors.
+
+### Current Git Status
+
+- Feature branch: `feature/ticket-comments`
+- Implementation: Completed
+- Automated testing: Completed
+- Commit, push and merge: Pending verification
+
+**Next Immediate Task:** Review, commit and push the feature branch, then merge into `develop`.
+
+**Note:** Existing Phase 1 roadmap and pending milestones remain unchanged.
+
